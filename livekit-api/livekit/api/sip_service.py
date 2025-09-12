@@ -607,7 +607,7 @@ class SipService(Service):
         self,
         rule_id: str,
         *,
-        trunk_ids: Optional[list[str]] = None,
+        trunk_ids: Optional[ListUpdate | list[str]] = None,
         rule: Optional[SIPDispatchRule] = None,
         name: Optional[str] = None,
         metadata: Optional[str] = None,
@@ -624,6 +624,14 @@ class SipService(Service):
             attributes=attributes,
             trunk_ids=ListUpdate(set=trunk_ids) if trunk_ids else None,
         )
+        if trunk_ids is not None:
+            if isinstance(trunk_ids, ListUpdate):
+                update.trunk_ids.set.extend(trunk_ids.set)
+                update.trunk_ids.add.extend(trunk_ids.add)
+                update.trunk_ids.remove.extend(trunk_ids.remove)
+            else:
+                update.trunk_ids.set.extend(trunk_ids)
+
         return await self._client.request(
             SVC,
             "UpdateSIPDispatchRule",
